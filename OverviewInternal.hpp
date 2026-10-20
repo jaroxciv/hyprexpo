@@ -62,7 +62,9 @@ int fallbackTokenToVisibleIndex(const std::string& token);
 
 SHyprGradientSpec parseGradientSpec(const std::string& inRaw);
 bool isGradientBorderSpec(const std::string& borderSpec);
-SP<Render::ITexture> renderNumberTexture(const std::string& text, const CHyprColor& color, const Vector2D& bufferSize, float scale, int fontSize);
+SP<Render::ITexture> renderNumberTexture(const std::string& text, const CHyprColor& color, const Vector2D& bufferSize, float scale, int fontSize, int maxWidth = 0);
+// The pixel size renderNumberTexture needs for text: its laid-out extents, rows included, each row no wider than maxWidth when positive.
+Vector2D             measureNumberTexture(const std::string& text, float scale, int fontSize, int maxWidth = 0);
 
 SWorkspacePreviewState applyWorkspacePreviewState(const PHLWORKSPACE& workspace);
 void restoreWorkspacePreviewState(const PHLWORKSPACE& workspace, const SWorkspacePreviewState& state);

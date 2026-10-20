@@ -89,6 +89,7 @@ inline constexpr int         LABEL_FONT_BOLD_DEFAULT         = 0;
 inline constexpr int         LABEL_FONT_ITALIC_DEFAULT       = 0;
 inline constexpr int         LABEL_TEXT_UNDERLINE_DEFAULT    = 0;
 inline constexpr int         LABEL_TEXT_STRIKETHROUGH_DEFAULT = 0;
+inline constexpr int         LABEL_MARKUP_DEFAULT             = 0;
 inline constexpr int         LABEL_PIXEL_SNAP_DEFAULT        = 1;
 inline constexpr int         LABEL_CENTER_ADJUST_X_DEFAULT   = 0;
 inline constexpr int         LABEL_CENTER_ADJUST_Y_DEFAULT   = 0;

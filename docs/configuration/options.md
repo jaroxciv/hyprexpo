@@ -256,6 +256,7 @@ drag_drop_proxy_rounding = 10
 | `plugin:hyprexpo:label_font_italic` | bool int | render label text in italic | `0` |
 | `plugin:hyprexpo:label_text_underline` | bool int | underline label text | `0` |
 | `plugin:hyprexpo:label_text_strikethrough` | bool int | strikethrough label text | `0` |
+| `plugin:hyprexpo:label_markup` | bool int | parse label text as Pango markup; newlines make rows, each ellipsized to the tile | `0` |
 | `plugin:hyprexpo:label_pixel_snap` | bool int | snap label positions to whole pixels | `1` |
 | `plugin:hyprexpo:label_center_adjust_x` | int | manual center nudge in pixels for centered labels | `0` |
 | `plugin:hyprexpo:label_center_adjust_y` | int | manual center nudge in pixels for centered labels | `0` |

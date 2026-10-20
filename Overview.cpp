@@ -289,17 +289,9 @@ bool isGradientBorderSpec(const std::string& borderSpec) {
     return Hyprexpo::isGradientBorderSpec(borderSpec);
 }
 
-SP<Render::ITexture> renderNumberTexture(const std::string& text, const CHyprColor& color, const Vector2D& bufferSize, const float scale, const int fontSize) {
-    const auto CAIROSURFACE = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, bufferSize.x, bufferSize.y);
-    const auto CAIRO        = cairo_create(CAIROSURFACE);
-
-    cairo_save(CAIRO);
-    cairo_set_operator(CAIRO, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(CAIRO);
-    cairo_restore(CAIRO);
-
-    PangoLayout* layout = pango_cairo_create_layout(CAIRO);
-    pango_layout_set_text(layout, text.c_str(), -1);
+// A layout for label text with the configured font; markup, when enabled, carries its own attributes.
+static PangoLayout* makeLabelLayout(cairo_t* cairo, const std::string& text, const float scale, const int fontSize, const int maxWidth) {
+    PangoLayout* layout = pango_cairo_create_layout(cairo);
 
     // font options from config
     static auto* const PFONTFAM = (Hyprlang::STRING const*)HyprlandAPI::getConfigValue(PHANDLE, "plugin:hyprexpo:label_font_family")->getDataStaticPtr();
@@ -307,6 +299,7 @@ SP<Render::ITexture> renderNumberTexture(const std::string& text, const CHyprCol
     static auto* const PFONTI   = (Hyprlang::INT* const*)HyprlandAPI::getConfigValue(PHANDLE, "plugin:hyprexpo:label_font_italic")->getDataStaticPtr();
     static auto* const PTUNDER  = (Hyprlang::INT* const*)HyprlandAPI::getConfigValue(PHANDLE, "plugin:hyprexpo:label_text_underline")->getDataStaticPtr();
     static auto* const PTSTRIKE = (Hyprlang::INT* const*)HyprlandAPI::getConfigValue(PHANDLE, "plugin:hyprexpo:label_text_strikethrough")->getDataStaticPtr();
+    static auto* const PMARKUP  = (Hyprlang::INT* const*)HyprlandAPI::getConfigValue(PHANDLE, "plugin:hyprexpo:label_markup")->getDataStaticPtr();
 
     PangoFontDescription* fontDesc = pango_font_description_from_string(*PFONTFAM);
     pango_font_description_set_size(fontDesc, fontSize * scale * PANGO_SCALE);
@@ -315,8 +308,14 @@ SP<Render::ITexture> renderNumberTexture(const std::string& text, const CHyprCol
     pango_layout_set_font_description(layout, fontDesc);
     pango_font_description_free(fontDesc);
 
+    // Invalid markup falls back to the literal text rather than an empty label.
+    if (!**PMARKUP || !pango_parse_markup(text.c_str(), -1, 0, nullptr, nullptr, nullptr, nullptr))
+        pango_layout_set_text(layout, text.c_str(), -1);
+    else
+        pango_layout_set_markup(layout, text.c_str(), -1);
+
     if (**PTUNDER || **PTSTRIKE) {
-        PangoAttrList* attrs = pango_attr_list_new();
+        PangoAttrList* attrs = pango_layout_get_attributes(layout) ? pango_attr_list_copy(pango_layout_get_attributes(layout)) : pango_attr_list_new();
         if (**PTUNDER) {
             pango_attr_list_insert(attrs, pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
         }
@@ -327,8 +326,44 @@ SP<Render::ITexture> renderNumberTexture(const std::string& text, const CHyprCol
         pango_attr_list_unref(attrs);
     }
 
-    pango_layout_set_width(layout, bufferSize.x * PANGO_SCALE);
-    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
+    // With no height limit, each paragraph (row) keeps one line and is ellipsized on its own.
+    if (maxWidth > 0) {
+        pango_layout_set_width(layout, maxWidth * PANGO_SCALE);
+        pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
+    } else
+        pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
+
+    return layout;
+}
+
+Vector2D measureNumberTexture(const std::string& text, const float scale, const int fontSize, const int maxWidth) {
+    const auto   SURFACE = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
+    const auto   CAIRO   = cairo_create(SURFACE);
+    PangoLayout* layout  = makeLabelLayout(CAIRO, text, scale, fontSize, maxWidth);
+
+    PangoRectangle ink_rect, logical_rect;
+    pango_layout_get_pixel_extents(layout, &ink_rect, &logical_rect);
+    g_object_unref(layout);
+    cairo_destroy(CAIRO);
+    cairo_surface_destroy(SURFACE);
+
+    // The union of ink and logical extents, so no glyph bearing is clipped.
+    const int x0 = std::min(ink_rect.x, logical_rect.x), y0 = std::min(ink_rect.y, logical_rect.y);
+    const int x1 = std::max(ink_rect.x + ink_rect.width, logical_rect.x + logical_rect.width);
+    const int y1 = std::max(ink_rect.y + ink_rect.height, logical_rect.y + logical_rect.height);
+    return {std::max(1, x1 - x0), std::max(1, y1 - y0)};
+}
+
+SP<Render::ITexture> renderNumberTexture(const std::string& text, const CHyprColor& color, const Vector2D& bufferSize, const float scale, const int fontSize, const int maxWidth) {
+    const auto CAIROSURFACE = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, bufferSize.x, bufferSize.y);
+    const auto CAIRO        = cairo_create(CAIROSURFACE);
+
+    cairo_save(CAIRO);
+    cairo_set_operator(CAIRO, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(CAIRO);
+    cairo_restore(CAIRO);
+
+    PangoLayout* layout = makeLabelLayout(CAIRO, text, scale, fontSize, maxWidth);
 
     cairo_set_source_rgba(CAIRO, color.r, color.g, color.b, color.a);
 

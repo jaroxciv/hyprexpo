@@ -138,6 +138,7 @@ void registerHyprexpoConfigValues() {
     addConfigValue(makeShared<Config::Values::CIntValue>("plugin:hyprexpo:label_font_italic", "label font italic", HyprexpoConfig::LABEL_FONT_ITALIC_DEFAULT));
     addConfigValue(makeShared<Config::Values::CIntValue>("plugin:hyprexpo:label_text_underline", "label text underline", HyprexpoConfig::LABEL_TEXT_UNDERLINE_DEFAULT));
     addConfigValue(makeShared<Config::Values::CIntValue>("plugin:hyprexpo:label_text_strikethrough", "label text strikethrough", HyprexpoConfig::LABEL_TEXT_STRIKETHROUGH_DEFAULT));
+    addConfigValue(makeShared<Config::Values::CIntValue>("plugin:hyprexpo:label_markup", "parse label text as Pango markup", HyprexpoConfig::LABEL_MARKUP_DEFAULT));
     addConfigValue(makeShared<Config::Values::CIntValue>("plugin:hyprexpo:label_pixel_snap", "label pixel snap", HyprexpoConfig::LABEL_PIXEL_SNAP_DEFAULT));
     addConfigValue(makeShared<Config::Values::CIntValue>("plugin:hyprexpo:label_center_adjust_x", "label center adjust x", HyprexpoConfig::LABEL_CENTER_ADJUST_X_DEFAULT));
     addConfigValue(makeShared<Config::Values::CIntValue>("plugin:hyprexpo:label_center_adjust_y", "label center adjust y", HyprexpoConfig::LABEL_CENTER_ADJUST_Y_DEFAULT));

@@ -444,9 +444,13 @@ void COverview::fullRender() {
         const int baseF = std::max(8, fontSize);
         if (!tex || tex->m_texID == 0) {
             const int fsz = std::max(8, (int)std::round(baseF * scaleMul));
-            Vector2D  buf{std::max(32, fsz * std::max(2, (int)label.size())), std::max(24, fsz + 8)};
+            // Sized to the laid-out text, rows included, and no wider than the tile at rest less the background's padding and the
+            // offset: the texture is cached from the first frame, while the opening animation still has the tile zoomed in.
+            const double restW = tileBoxForIndex(0, MON->m_size, GAP_WIDTH, OUTER, true).w * MON->m_scale;
+            const int    maxW  = std::max(1, (int)restW - 2 * (int)**PLBGPAD - 2 * std::abs(offsetX));
+            const auto buf = measureNumberTexture(label, MON->m_scale, fsz, maxW);
             sz  = buf;
-            tex = renderNumberTexture(label, col, buf, MON->m_scale, fsz);
+            tex = renderNumberTexture(label, col, buf, MON->m_scale, fsz, maxW);
         }
 
         if (!tex || tex->m_texID == 0)
@@ -633,6 +637,13 @@ void COverview::fullRender() {
                 }
 
                 const int st = resolveState((int)id);
+                if (images[id].labelText != label) {
+                    images[id].labelText = label;
+                    images[id].labelTexDefault.reset();
+                    images[id].labelTexHover.reset();
+                    images[id].labelTexFocus.reset();
+                    images[id].labelTexCurrent.reset();
+                }
                 if (!label.empty()) {
                     if (showWorkspaceNumbers)
                         renderLabel(images[id].labelTexDefault, images[id].labelSizeDefault, label, CHyprColor{(uint64_t)**PWSNUMCOL}, 1.0f, tile, labelAnchor, **PLABELOX, **PLABELOY,

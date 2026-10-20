@@ -105,6 +105,8 @@ class COverview final : public IOverviewSession {
         Vector2D                 labelSizeFocus   = {0, 0};
         Vector2D                 labelSizeCurrent = {0, 0};
         Vector2D                 selectionLabelSize = {0, 0};
+        // The text the label textures were drawn from; a renamed workspace redraws them.
+        std::string              labelText;
     };
 
   private:
